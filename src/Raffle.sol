@@ -21,11 +21,17 @@
 // internal & private view & pure functions
 // external & public view & pure functions
 
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.19;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
 
 import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+
+abstract contract RaffleEvents {
+    // events
+    event RaffleEntered(address indexed player);
+    event RaffleWinnerPicked(address indexed winner);
+}
 
 /**
  * @title A simple Raffle lottery contract
@@ -33,7 +39,7 @@ import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/V
  * @notice This contract is for creating a simple raffle
  * @dev Implements Chainlink VRF2.5
  */
-contract Raffle is VRFConsumerBaseV2Plus {
+contract Raffle is RaffleEvents, VRFConsumerBaseV2Plus {
     // Errors
     error Raffle__InsufficientEntranceFee();
     error Raffle__TransferFailed();
@@ -60,10 +66,6 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint256 private sLastTimestamp;
     address private sRecentWinner;
     RaffleState private sRaffleState;
-
-    // events
-    event RaffleEntered(address indexed player);
-    event RaffleWinnerPicked(address indexed winner);
 
     constructor(
         uint256 _entranceFee,
@@ -165,5 +167,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
     // Getter functions
     function getEntranceFee() external view returns (uint256) {
         return I_ENTERANCE_FEE;
+    }
+
+    function getRaffleState() external view returns (RaffleState) {
+        return sRaffleState;
+    }
+
+    function getRafflePlayers() external view returns(address payable[] memory) {
+        return sPlayers;
     }
 }
