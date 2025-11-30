@@ -16,6 +16,7 @@ contract InteractionsTest is Test {
     Raffle raffle;
     HelperConfig helperConfig;
     HelperConfig.NetworkConfig config;
+    
     address public vrfCoordinator;
     uint256 public subId;
 
@@ -49,7 +50,7 @@ contract InteractionsTest is Test {
         assert(balance == fundVrfSubscription.getSubscriptionAmount());
     }
 
-    function testAddVrfConsumer() public createSub {
+    function testAddVrfConsumerWithNoFunding() public createSub {
         AddVRFConsumer addVrfConsumer = new AddVRFConsumer();
         addVrfConsumer.addConsumer(subId, config.vrfCoordinator, config.account, address(raffle));
 
@@ -60,6 +61,23 @@ contract InteractionsTest is Test {
         
         assert(config.account == subOwner);
         assert(balance == 0);
+        assert(consumers.length == 1);
+    }
+
+    function testAddVrfConsumerWithFunding() public createSub {
+        FundVRFSubscription fundVrfSubscription = new FundVRFSubscription();
+        fundVrfSubscription.fundSubscription(subId, config.vrfCoordinator, config.link, config.account);
+
+        AddVRFConsumer addVrfConsumer = new AddVRFConsumer();
+        addVrfConsumer.addConsumer(subId, config.vrfCoordinator, config.account, address(raffle));
+
+        uint96 balance;
+        address subOwner;
+        address[] memory consumers;
+        (balance, , ,subOwner, consumers) = VRFCoordinatorV2_5Mock(config.vrfCoordinator).getSubscription(subId);
+        
+        assert(config.account == subOwner);
+        assert(balance == fundVrfSubscription.getSubscriptionAmount());
         assert(consumers.length == 1);
     }
 }
