@@ -8,7 +8,7 @@ import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VR
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {Raffle} from "src/Raffle.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
-import {CreateVRFSubscription, FundVRFSubscription} from "script/Interactions.s.sol";
+import {CreateVRFSubscription, FundVRFSubscription, AddVRFConsumer} from "script/Interactions.s.sol";
 
 contract InteractionsTest is Test {
     uint256 STARTING_BALANCE = 10 ether;
@@ -47,5 +47,19 @@ contract InteractionsTest is Test {
 
         assert(config.account == subOwner);
         assert(balance == fundVrfSubscription.getSubscriptionAmount());
+    }
+
+    function testAddVrfConsumer() public createSub {
+        AddVRFConsumer addVrfConsumer = new AddVRFConsumer();
+        addVrfConsumer.addConsumer(subId, config.vrfCoordinator, config.account, address(raffle));
+
+        uint96 balance;
+        address subOwner;
+        address[] memory consumers;
+        (balance, , ,subOwner, consumers) = VRFCoordinatorV2_5Mock(config.vrfCoordinator).getSubscription(subId);
+        
+        assert(config.account == subOwner);
+        assert(balance == 0);
+        assert(consumers.length == 1);
     }
 }
