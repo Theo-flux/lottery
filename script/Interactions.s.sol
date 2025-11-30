@@ -26,8 +26,8 @@ contract CreateVRFSubscription is Script {
         return (subId, _vrfCoordinator);
     }
 
-    function run() external {
-        getOrCreateSubscriptionFromConfig();
+    function run() external returns(uint256, address) {
+        return getOrCreateSubscriptionFromConfig();
     }
 }
 
@@ -58,6 +58,14 @@ contract FundVRFSubscription is Script, CodeConstants {
 
     function run() external {
         fundSubscriptionFromConfig();
+    }
+
+    // Getters
+    function getSubscriptionAmount() external view returns(uint256) {
+        if(block.chainid == CodeConstants.LOCAL_CHAIN_ID) {
+            return SUBSCRIPTION_AMOUNT * 100;
+        }
+        return SUBSCRIPTION_AMOUNT;
     }
 }
 

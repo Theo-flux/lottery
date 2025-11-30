@@ -39,7 +39,7 @@ contract DeployRaffle is Script {
         return (raffle, helperConfig);
     }
 
-    function run() public {
-        deployContract();
+    function run() public returns (Raffle, HelperConfig) {
+        return deployContract();
     }
 }
