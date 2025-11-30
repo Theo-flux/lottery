@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {Raffle, RaffleEvents} from "src/Raffle.sol";
@@ -20,6 +21,14 @@ contract RaffleUnitTest is RaffleEvents, Test {
     bytes32 keyHash;
     uint256 subscriptionId;
     uint32 callbackGasLimit;
+
+    modifier raffleEntered {
+        hoax(PLAYER, STARTING_BALANCE);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        _;
+    }
 
     function setUp() external {
         DeployRaffle deployer = new DeployRaffle();
@@ -59,17 +68,44 @@ contract RaffleUnitTest is RaffleEvents, Test {
         raffle.enterRaffle{value: entranceFee}();
     }
 
-    function testPauseRaffleWhenRaffleStateIsCalculating() public {
-        hoax(PLAYER, STARTING_BALANCE);
+    function testPauseRaffleWhenRaffleStateIsCalculating() public raffleEntered {
+        raffle.performUpkeep();
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
         raffle.enterRaffle{value: entranceFee}();
+    }
+
+    function testCheckUpKeepWhenRaffleHasNoBallance() public {
+        hoax(PLAYER, STARTING_BALANCE);
         vm.warp(block.timestamp + interval + 1);
         vm.roll(block.number + 1);
+        (bool upKeepNeeded, ) = raffle.checkUpkeep("");
 
+        assert(upKeepNeeded == false);
+    }
+
+    function testCheckUpKeepReturnsFalseWhenRaffleStateIsNotOpen() public raffleEntered {
         raffle.performUpkeep();
 
-        // hoax(PLAYER, STARTING_BALANCE);
-        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
-        vm.prank(PLAYER);
-        raffle.enterRaffle{value: entranceFee}();
+        (bool upKeepNeeded, ) = raffle.checkUpkeep("");
+        assert(upKeepNeeded == false);
+    }
+
+    function testPerformUpKeepRevertsWhenNoUpKeepNeeded() public {
+        hoax(PLAYER, STARTING_BALANCE);
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        vm.expectRevert(abi.encodeWithSelector(Raffle.Raffle__UpKeepNotNeeded.selector, address(raffle).balance, raffle.getRafflePlayers().length, uint256(raffle.getRaffleState())));
+        raffle.performUpkeep();
+    }
+
+    function testPerformUpKeepNeededWithRaffleRequesuIdWinnerEvent() public raffleEntered {
+        vm.recordLogs();
+        raffle.performUpkeep();
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        bytes32 requestId = entries[1].topics[1];
+
+        assert(uint256(requestId) > 0);
+        assert(uint256(uint256(raffle.getRaffleState())) == 1);
     }
 }

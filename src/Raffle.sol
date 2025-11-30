@@ -31,6 +31,7 @@ abstract contract RaffleEvents {
     // events
     event RaffleEntered(address indexed player);
     event RaffleWinnerPicked(address indexed winner);
+    event RaffleRequesuIdWinner(uint256 indexed requestId);
 }
 
 /**
@@ -130,7 +131,8 @@ contract Raffle is RaffleEvents, VRFConsumerBaseV2Plus {
             extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
         });
 
-        s_vrfCoordinator.requestRandomWords(randomWordsReqs);
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(randomWordsReqs);
+        emit RaffleRequesuIdWinner(requestId);
     }
 
     function performUpkeep() external  {
