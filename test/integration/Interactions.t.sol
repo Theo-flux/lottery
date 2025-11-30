@@ -11,8 +11,6 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {CreateVRFSubscription, FundVRFSubscription, AddVRFConsumer} from "script/Interactions.s.sol";
 
 contract InteractionsTest is Test {
-    uint256 STARTING_BALANCE = 10 ether;
-    address USER = makeAddr("user");
     Raffle raffle;
     HelperConfig helperConfig;
     HelperConfig.NetworkConfig config;
