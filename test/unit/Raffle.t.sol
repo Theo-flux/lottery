@@ -7,9 +7,9 @@ import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VR
   
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {Raffle, RaffleEvents} from "src/Raffle.sol";
-import {HelperConfig} from "script/HelperConfig.s.sol";
+import {HelperConfig, CodeConstants} from "script/HelperConfig.s.sol";
 
-contract RaffleUnitTest is RaffleEvents, Test {
+contract RaffleUnitTest is CodeConstants, RaffleEvents, Test {
     Raffle public raffle;
     HelperConfig public helperConfig;
 
@@ -29,6 +29,13 @@ contract RaffleUnitTest is RaffleEvents, Test {
         vm.warp(block.timestamp + interval + 1);
         vm.roll(block.number + 1);
         _;
+    }
+
+    modifier skipFork {
+        if (block.chainid != LOCAL_CHAIN_ID) {
+            return;
+        }
+        _;   
     }
 
     function setUp() external {
@@ -110,17 +117,17 @@ contract RaffleUnitTest is RaffleEvents, Test {
         assert(uint256(uint256(raffle.getRaffleState())) == 1);
     }
 
-    function testFulfillRandomWordsCalledOnlyAfterPerformUpKeep(uint256 _randomId) public raffleEntered {
+    function testFulfillRandomWordsCalledOnlyAfterPerformUpKeep(uint256 _randomId) public skipFork raffleEntered {
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(_randomId, address(raffle));
     }
 
-    function testFulfillRandomWordsCalledSuccessfullyResetsRaffle() public raffleEntered {
-        uint256 additionalPlayers = 4; // Total of 5 players
-        uint256 startingIndex = 1;
+    function testFulfillRandomWordsCalledSuccessfullyResetsRaffle() public skipFork raffleEntered {
+        uint160 additionalPlayers = 4; // Total of 5 players
+        uint160 startingIndex = 1;
 
-        for (uint256 i = startingIndex; i < startingIndex + additionalPlayers; i++) {
-            address newPlayer = address(uint160(i));
+        for (uint160 i = startingIndex; i < startingIndex + additionalPlayers; i++) {
+            address newPlayer = address(i);
             hoax(newPlayer, STARTING_BALANCE);
             raffle.enterRaffle{value: entranceFee}();
         }

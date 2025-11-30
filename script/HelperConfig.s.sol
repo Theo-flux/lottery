@@ -2,7 +2,9 @@
 pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
+import {CommonBase} from "forge-std/Base.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+
 import {LinkToken} from "test/mocks/LinkToken.sol";
 
 abstract contract CodeConstants {
@@ -28,6 +30,7 @@ contract HelperConfig is Script, CodeConstants {
         uint256 subscriptionId;
         uint32 callbackGasLimit;
         address link;
+        address account;
     }
 
     // State variables
@@ -57,7 +60,8 @@ contract HelperConfig is Script, CodeConstants {
             keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             subscriptionId: 20234868474368247569650686085149038017637592532061446017781408578151331199834,
             callbackGasLimit: 500000, // 500,000 gas
-            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0xEdD41e6675C4312121F11ED4450bA944734CbCC2
         });
     }
 
@@ -78,7 +82,8 @@ contract HelperConfig is Script, CodeConstants {
             keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             subscriptionId: 0,
             callbackGasLimit: 500000, // 500,000 gas
-            link: address(linkToken)
+            link: address(linkToken),
+            account: CommonBase.DEFAULT_SENDER
         });
         return localNetworkConfig;
     }
